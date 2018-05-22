@@ -44,5 +44,9 @@ int main() {
 		glfwPollEvents();
 	}
 
+	glfwDestroyWindow(window);
+
+	glfwTerminate();
+
 	printf("Hello World!\n");
 }
