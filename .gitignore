@@ -1,0 +1,5 @@
+*.pdf
+solarSystem
+src/obj/
+.DS_Store
+src/.DS_Store
