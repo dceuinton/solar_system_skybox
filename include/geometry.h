@@ -9,3 +9,4 @@ void generateRectangle(std::vector<GLfloat> &vertices, std::vector<GLuint> &indi
 void generateSphere(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, GLfloat radius, GLuint stacks, GLuint slices);
 void generateCylinder(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, GLfloat radius, GLfloat height, GLuint circleSegments, GLuint heightSegments);
 void createSkybox(std::vector<glm::vec4> &buffer, std::vector<glm::ivec3> &indices);
+void createSphereData(std::vector<glm::vec4> &buffer, std::vector<glm::ivec3> &indexes, float r, int sub1, int sub2);

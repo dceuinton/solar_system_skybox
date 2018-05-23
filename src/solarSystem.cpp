@@ -19,6 +19,18 @@ using namespace std;
 
 GLMVirtualCamera cam; 
 
+struct GLObject {
+	vector<glm::vec4> buffer;
+	vector<glm::ivec3> indices;
+	GLuint vao;
+	GLuint vbo;
+	GLuint ebo;
+	GLuint sp;
+	GLuint modelMatrixLoc;
+	GLuint viewMatrixLoc;
+	GLuint texture;
+};
+
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		if (key == GLFW_KEY_ESCAPE) {
@@ -81,6 +93,8 @@ int main() {
 	glGenBuffers(1, &skyboxVBO);
 	glGenBuffers(1, &skyboxEBO);
 
+	// printf("skybox vao, vbo, and ebo: (%i, %i, %i)\n",skyboxVAO, skyboxVBO, skyboxEBO);
+
 	// Binding
 	glBindVertexArray(skyboxVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
@@ -94,6 +108,52 @@ int main() {
 	glEnableVertexAttribArray(skyboxPosLoc);
 
 	// Unbinding
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	// ----------------------------------------------------------------------
+
+	GLObject earth;
+
+	int x2, y2, n2; 
+
+	earth.texture = loadTexture2D("./images/earth_texture.tga", x2, y2, n2);
+
+	createSphereData(earth.buffer, earth.indices, 0.5, 3, 3);
+
+	earth.sp = loadProgram("./shader/planet.vert.glsl", NULL, NULL, NULL, "./shader/planet.frag.glsl");
+
+	glUseProgram(earth.sp);
+
+	glGenVertexArrays(1, &earth.vao);
+	glGenBuffers(1, &earth.vbo);
+	glGenBuffers(1, &earth.ebo);
+
+	// printf("earth vao, vbo, and ebo: (%i, %i, %i)\n",earth.vao, earth.vbo, earth.ebo);
+
+	glBindVertexArray(earth.vao);
+	glBindBuffer(GL_ARRAY_BUFFER, earth.vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, earth.ebo);
+
+	glBufferData(GL_ARRAY_BUFFER, earth.buffer.size() * sizeof(glm::vec4), earth.buffer.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, earth.indices.size() * sizeof(glm::ivec3), earth.indices.data(), GL_STATIC_DRAW);
+
+	GLuint earthVertexPosition = glGetAttribLocation(earth.sp, "vertexPosition");
+	GLuint earthNormalPosition = glGetAttribLocation(earth.sp, "normalVec");
+	GLuint earthTCPosition = glGetAttribLocation(earth.sp, "textureCoordinate");
+
+	glVertexAttribPointer(earthVertexPosition, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), NULL);
+	glVertexAttribPointer(earthNormalPosition, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (GLvoid*) (4 * sizeof(GLfloat)));
+	glVertexAttribPointer(earthTCPosition, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (GLvoid*) (8 * sizeof(GLfloat)));
+
+	glEnableVertexAttribArray(earthVertexPosition);
+	glEnableVertexAttribArray(earthNormalPosition);
+	glEnableVertexAttribArray(earthTCPosition);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -116,13 +176,13 @@ int main() {
 
 	float currentTime = 0.0;
 	float previousTime = glfwGetTime();
-	float elapsed = 0.0;
+	float dt = 0.0;
 
 	while (!glfwWindowShouldClose(window)) {
 
 		// Timer
 		currentTime = glfwGetTime();
-		elapsed = currentTime - previousTime;
+		dt = currentTime - previousTime;
 		previousTime = currentTime;
 
 		glfwMakeContextCurrent(window);
@@ -133,18 +193,18 @@ int main() {
 
 		float camMoveSpeed = 1.0f;
 		float camRotateSpeed = PI;
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)     { cam.moveForwards(elapsed * camMoveSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)     { cam.moveBackwards(elapsed * camMoveSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)     { cam.moveLeft(elapsed * camMoveSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)     { cam.moveRight(elapsed * camMoveSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)     { cam.moveUp(elapsed * camMoveSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)     { cam.moveDown(elapsed * camMoveSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)    { cam.lookUp(elapsed * camRotateSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  { cam.lookDown(elapsed * camRotateSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)  { cam.lookLeft(elapsed * camRotateSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { cam.lookRight(elapsed * camRotateSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)     { cam.rollLeft(elapsed * camRotateSpeed); }
-		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)     { cam.rollRight(elapsed * camRotateSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)     { cam.moveForwards(dt * camMoveSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)     { cam.moveBackwards(dt * camMoveSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)     { cam.moveLeft(dt * camMoveSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)     { cam.moveRight(dt * camMoveSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)     { cam.moveUp(dt * camMoveSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)     { cam.moveDown(dt * camMoveSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)    { cam.lookUp(dt * camRotateSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  { cam.lookDown(dt * camRotateSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)  { cam.lookLeft(dt * camRotateSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { cam.lookRight(dt * camRotateSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)     { cam.rollLeft(dt * camRotateSpeed); }
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)     { cam.rollRight(dt * camRotateSpeed); }
 
 		// ----------------------------------------------------------------------
 
