@@ -114,13 +114,27 @@ int main() {
 
 	// ----------------------------------------------------------------------
 
+	//Setting the skybox program uniforms
+	// Set the texture unit
+	glUseProgram(skyboxProgram);
+	glUniform1i(glGetUniformLocation(skyboxProgram, "u_texture_Map"), 0);
+
+	GLuint skyboxViewLoc = glGetUniformLocation(skyboxProgram, "u_View");
+	glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+
+	glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 50.0f);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "u_Projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUseProgram(0);
+
+	// ----------------------------------------------------------------------
+
 	GLObject earth;
 
 	int x2, y2, n2; 
 
 	earth.texture = loadTexture2D("./images/earth_texture.tga", x2, y2, n2);
 
-	createSphereData(earth.buffer, earth.indices, 0.5, 3, 3);
+	createSphereData(earth.buffer, earth.indices, 0.3, 100, 100);
 
 	earth.sp = loadProgram("./shader/planet.vert.glsl", NULL, NULL, NULL, "./shader/planet.frag.glsl");
 
@@ -160,23 +174,24 @@ int main() {
 
 	// ----------------------------------------------------------------------
 
-	//Setting the skybox program uniforms
-	// Set the texture unit
-	glUseProgram(skyboxProgram);
-	glUniform1i(glGetUniformLocation(skyboxProgram, "u_texture_Map"), 0);
+	glUseProgram(earth.sp);
+	earth.modelMatrixLoc = glGetUniformLocation(earth.sp, "uModel");
+	earth.viewMatrixLoc  = glGetUniformLocation(earth.sp, "uView");
 
-	GLuint skyboxViewLoc = glGetUniformLocation(skyboxProgram, "u_View");
-	glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
-
-	glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 50.0f);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "u_Projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUseProgram(0);
+	glm::mat4 earthModelMatrix;
+	glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earthModelMatrix));
+	glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+	glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
 	// ----------------------------------------------------------------------
 
 	float currentTime = 0.0;
 	float previousTime = glfwGetTime();
 	float dt = 0.0;
+
+	float modelThetaX = 0, modelThetaY = 0;
+
+	cam.moveBackwards(1.0f);
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -206,6 +221,11 @@ int main() {
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)     { cam.rollLeft(dt * camRotateSpeed); }
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)     { cam.rollRight(dt * camRotateSpeed); }
 
+		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)     { modelThetaX += dt * camRotateSpeed; }		
+		if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)     { modelThetaX -= dt * camRotateSpeed; }		
+		if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)     { modelThetaY += dt * camRotateSpeed; }		
+		if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)     { modelThetaY -= dt * camRotateSpeed; }		
+
 		// ----------------------------------------------------------------------
 
 		glUseProgram(skyboxProgram);
@@ -220,6 +240,25 @@ int main() {
 		glEnable(GL_DEPTH_TEST);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+		// ----------------------------------------------------------------------
+
+		earthModelMatrix = glm::translate(glm::mat4(),              glm::vec3(0.0f, 0.0f, 0.0f)) * 
+						   glm::rotate(   glm::mat4(), modelThetaY, glm::vec3(0.0f, 1.0f, 0.0f)) *
+						   glm::rotate(   glm::mat4(), modelThetaX, glm::vec3(1.0f, 0.0f, 0.0f));		
+
+		glUseProgram(earth.sp);
+		glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earthModelMatrix));
+		glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, earth.texture);
+
+		glBindVertexArray(earth.vao);
+		glDrawElements(GL_TRIANGLES, earth.indices.size() * 3, GL_UNSIGNED_INT, NULL);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, earth.texture);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

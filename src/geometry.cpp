@@ -170,7 +170,7 @@ void createSphereData(std::vector<glm::vec4> &buffer, std::vector<glm::ivec3> &i
 		// ----------------------------------------------------------------------
 		// Expand this!!!! 
 		// ----------------------------------------------------------------------
-		for(int i2 = 0; i2 < sub2; i2++) {
+		for(int i2 = 0; i2 <= sub2; i2++) {
 			// Phi [0, 2pi)
 			float phi = i2 * M_PI * 2.0 / sub2;
 
