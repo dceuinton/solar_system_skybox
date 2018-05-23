@@ -122,6 +122,8 @@ GLuint loadTexture2D(const char *filename, int &width, int &height, int &n) {
 
 // Load a CubeMap Texture from file
 GLuint loadTextureCubeMap(const char *filename[6], int &width, int &height, int &n) {
+
+	printf("Loading Cube Map\n");
 	// Texture
 	GLuint texture;
 

@@ -89,7 +89,7 @@ int main() {
 	glBufferData(GL_ARRAY_BUFFER, skyboxBuffer.size() * sizeof(glm::vec4), skyboxBuffer.data(), GL_STATIC_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, skyboxIndices.size() * sizeof(glm::ivec3), skyboxIndices.data(), GL_STATIC_DRAW);
 
-	GLuint skyboxPosLoc = glGetAttribLocation(skyboxProgram, "vert_position");
+	GLuint skyboxPosLoc = glGetAttribLocation(skyboxProgram, "vert_Position");
 	glVertexAttribPointer(skyboxPosLoc, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), NULL);
 	glEnableVertexAttribArray(skyboxPosLoc);
 
@@ -151,6 +151,7 @@ int main() {
 		glUseProgram(skyboxProgram);
 		glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
 
+		glUseProgram(skyboxProgram);
 		glBindVertexArray(skyboxVAO);
 		glDisable(GL_DEPTH_TEST);
 		glActiveTexture(GL_TEXTURE0);
@@ -163,6 +164,8 @@ int main() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	printf("%s\n", glGetString(GL_VERSION));
 
 	glDeleteVertexArrays(1, &skyboxVAO);
 	glDeleteBuffers(1, &skyboxVBO);
