@@ -127,3 +127,30 @@ void generateCylinder(std::vector<GLfloat> &vertices, std::vector<GLuint> &indic
 		indices.push_back(lastPt - j%(circleSegments) - 1);
 	}	
 }
+
+// Create Skybox (Cube with Positions only)
+void createSkybox(std::vector<glm::vec4> &buffer, std::vector<glm::ivec3> &indices) {
+	// Vertices
+	buffer.push_back(glm::vec4(-1.0f,  1.0f, -1.0f,  1.0f)); // Left  - Top    - Back  - 0
+	buffer.push_back(glm::vec4( 1.0f,  1.0f, -1.0f,  1.0f)); // Right - Top    - Back  - 1
+	buffer.push_back(glm::vec4(-1.0f,  1.0f,  1.0f,  1.0f)); // Left  - Top    - Front - 2
+	buffer.push_back(glm::vec4( 1.0f,  1.0f,  1.0f,  1.0f)); // Right - Top    - Front - 3
+	buffer.push_back(glm::vec4(-1.0f, -1.0f, -1.0f,  1.0f)); // Left  - Bottom - Back  - 4
+	buffer.push_back(glm::vec4( 1.0f, -1.0f, -1.0f,  1.0f)); // Right - Bottom - Back  - 5
+	buffer.push_back(glm::vec4(-1.0f, -1.0f,  1.0f,  1.0f)); // Left  - Bottom - Front - 6
+	buffer.push_back(glm::vec4( 1.0f, -1.0f,  1.0f,  1.0f)); // Right - Bottom - Front - 7
+
+	// Indexes
+	indices.push_back(glm::ivec3(0, 2, 3)); // Top
+	indices.push_back(glm::ivec3(0, 3, 1));
+	indices.push_back(glm::ivec3(4, 5, 7)); // Bottom
+	indices.push_back(glm::ivec3(4, 7, 6));
+	indices.push_back(glm::ivec3(0, 2, 6)); // Left
+	indices.push_back(glm::ivec3(0, 6, 4));
+	indices.push_back(glm::ivec3(3, 1, 5)); // Right
+	indices.push_back(glm::ivec3(3, 5, 7));
+	indices.push_back(glm::ivec3(2, 3, 7)); // Front
+	indices.push_back(glm::ivec3(2, 7, 6));
+	indices.push_back(glm::ivec3(1, 0, 4)); // Back
+	indices.push_back(glm::ivec3(1, 4, 5));
+}
