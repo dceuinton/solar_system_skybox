@@ -1,6 +1,6 @@
 CC = g++
 BIN = solarSystem
-OBJS = $(BUILD)/$(BIN).o $(BUILD)/openGLUtils.o $(BUILD)/geometry.o $(BUILD)/glm_virtual_camera.o $(BUILD)/image.o
+OBJS = $(BUILD)/$(BIN).o $(BUILD)/openGLUtils.o $(BUILD)/geometry.o $(BUILD)/glm_virtual_camera.o $(BUILD)/image.o $(BUILD)/GLObject.o
 CFLAGS = -std=c++11
 INC = -I/opt/local/include -I./include/
 LIB = -L/opt/local/lib

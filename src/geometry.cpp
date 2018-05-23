@@ -129,16 +129,16 @@ void generateCylinder(std::vector<GLfloat> &vertices, std::vector<GLuint> &indic
 }
 
 // Create Skybox (Cube with Positions only)
-void createSkybox(std::vector<glm::vec4> &buffer, std::vector<glm::ivec3> &indices) {
+void createSkybox(std::vector<glm::vec4> &buffer, std::vector<glm::ivec3> &indices, int size) {
 	// Vertices
-	buffer.push_back(glm::vec4(-1.0f,  1.0f, -1.0f,  1.0f)); // Left  - Top    - Back  - 0
-	buffer.push_back(glm::vec4( 1.0f,  1.0f, -1.0f,  1.0f)); // Right - Top    - Back  - 1
-	buffer.push_back(glm::vec4(-1.0f,  1.0f,  1.0f,  1.0f)); // Left  - Top    - Front - 2
-	buffer.push_back(glm::vec4( 1.0f,  1.0f,  1.0f,  1.0f)); // Right - Top    - Front - 3
-	buffer.push_back(glm::vec4(-1.0f, -1.0f, -1.0f,  1.0f)); // Left  - Bottom - Back  - 4
-	buffer.push_back(glm::vec4( 1.0f, -1.0f, -1.0f,  1.0f)); // Right - Bottom - Back  - 5
-	buffer.push_back(glm::vec4(-1.0f, -1.0f,  1.0f,  1.0f)); // Left  - Bottom - Front - 6
-	buffer.push_back(glm::vec4( 1.0f, -1.0f,  1.0f,  1.0f)); // Right - Bottom - Front - 7
+	buffer.push_back(glm::vec4(size * -1.0f,  size * 1.0f, size * -1.0f,  size * 1.0f)); // Left  - Top    - Back  - 0
+	buffer.push_back(glm::vec4( size * 1.0f,  size * 1.0f, size * -1.0f,  size * 1.0f)); // Right - Top    - Back  - 1
+	buffer.push_back(glm::vec4(size * -1.0f,  size * 1.0f,  size * 1.0f,  size * 1.0f)); // Left  - Top    - Front - 2
+	buffer.push_back(glm::vec4( size * 1.0f,  size * 1.0f,  size * 1.0f,  size * 1.0f)); // Right - Top    - Front - 3
+	buffer.push_back(glm::vec4(size * -1.0f, size * -1.0f, size * -1.0f,  size * 1.0f)); // Left  - Bottom - Back  - 4
+	buffer.push_back(glm::vec4( size * 1.0f, size * -1.0f, size * -1.0f,  size * 1.0f)); // Right - Bottom - Back  - 5
+	buffer.push_back(glm::vec4(size * -1.0f, size * -1.0f,  size * 1.0f,  size * 1.0f)); // Left  - Bottom - Front - 6
+	buffer.push_back(glm::vec4( size * 1.0f, size * -1.0f,  size * 1.0f,  size * 1.0f)); // Right - Bottom - Front - 7
 
 	// Indexes
 	indices.push_back(glm::ivec3(0, 2, 3)); // Top

@@ -12,6 +12,7 @@
 #include "glm_virtual_camera.h"
 #include "image.h"
 #include "geometry.h"
+#include "GLObject.h"
 
 using namespace std;
 
@@ -19,17 +20,17 @@ using namespace std;
 
 GLMVirtualCamera cam; 
 
-struct GLObject {
-	vector<glm::vec4> buffer;
-	vector<glm::ivec3> indices;
-	GLuint vao;
-	GLuint vbo;
-	GLuint ebo;
-	GLuint sp;
-	GLuint modelMatrixLoc;
-	GLuint viewMatrixLoc;
-	GLuint texture;
-};
+// struct GLObject {
+// 	vector<glm::vec4> buffer;
+// 	vector<glm::ivec3> indices;
+// 	GLuint vao;
+// 	GLuint vbo;
+// 	GLuint ebo;
+// 	GLuint sp;
+// 	GLuint modelMatrixLoc;
+// 	GLuint viewMatrixLoc;
+// 	GLuint texture;
+// };
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -85,7 +86,7 @@ int main() {
 	vector<glm::vec4> skyboxBuffer;
 	vector<glm::ivec3> skyboxIndices;
 
-	createSkybox(skyboxBuffer, skyboxIndices);
+	createSkybox(skyboxBuffer, skyboxIndices, 10);
 
 	GLuint skyboxVAO = 0, skyboxVBO = 0, skyboxEBO = 0;
 
@@ -129,48 +130,11 @@ int main() {
 	// ----------------------------------------------------------------------
 
 	GLObject earth;
-
-	int x2, y2, n2; 
-
-	earth.texture = loadTexture2D("./images/earth_texture.tga", x2, y2, n2);
-
+	loadObjectTexture(earth, "./images/earth_texture.tga");
 	createSphereData(earth.buffer, earth.indices, 0.3, 100, 100);
-
 	earth.sp = loadProgram("./shader/planet.vert.glsl", NULL, NULL, NULL, "./shader/planet.frag.glsl");
-
 	glUseProgram(earth.sp);
-
-	glGenVertexArrays(1, &earth.vao);
-	glGenBuffers(1, &earth.vbo);
-	glGenBuffers(1, &earth.ebo);
-
-	// printf("earth vao, vbo, and ebo: (%i, %i, %i)\n",earth.vao, earth.vbo, earth.ebo);
-
-	glBindVertexArray(earth.vao);
-	glBindBuffer(GL_ARRAY_BUFFER, earth.vbo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, earth.ebo);
-
-	glBufferData(GL_ARRAY_BUFFER, earth.buffer.size() * sizeof(glm::vec4), earth.buffer.data(), GL_STATIC_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, earth.indices.size() * sizeof(glm::ivec3), earth.indices.data(), GL_STATIC_DRAW);
-
-	GLuint earthVertexPosition = glGetAttribLocation(earth.sp, "vertexPosition");
-	GLuint earthNormalPosition = glGetAttribLocation(earth.sp, "normalVec");
-	GLuint earthTCPosition = glGetAttribLocation(earth.sp, "textureCoordinate");
-
-	glVertexAttribPointer(earthVertexPosition, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), NULL);
-	glVertexAttribPointer(earthNormalPosition, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (GLvoid*) (4 * sizeof(GLfloat)));
-	glVertexAttribPointer(earthTCPosition, 4, GL_FLOAT, GL_FALSE, 12 * sizeof(GLfloat), (GLvoid*) (8 * sizeof(GLfloat)));
-
-	glEnableVertexAttribArray(earthVertexPosition);
-	glEnableVertexAttribArray(earthNormalPosition);
-	glEnableVertexAttribArray(earthTCPosition);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	bindAndSetBuffers(earth, false);
 
 	// ----------------------------------------------------------------------
 
