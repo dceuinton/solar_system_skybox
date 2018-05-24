@@ -31,6 +31,7 @@ struct GLObject {
 	glm::vec3 position;
 	float orbitRadius;
 	float orbitGradient;
+	float orbitPeriod;
 };
 
 void loadObjectTexture(GLObject &object, const char *filename);

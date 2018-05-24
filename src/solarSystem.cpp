@@ -48,18 +48,18 @@ void updateViewMatrix(GLObject &object) {
 	glUniformMatrix4fv(object.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
 }
 
-void orbit(GLObject & object, float radius, float time, float gradient) {
+void orbit(GLObject & object, float time) {
 	float x, y, z;
-	x = radius * cos(time);
-	y = gradient * x;
-	z = radius * sin(time);
+	x = object.orbitRadius * cos(2*M_PI*time / object.orbitPeriod);
+	y = object.orbitGradient * x;
+	z = object.orbitRadius * sin(2*M_PI*time / object.orbitPeriod);
 	object.modelMatrix = glm::translate(glm::mat4(), glm::vec3(x, y, z)) * 
 		glm::rotate(glm::mat4(), object.rotationSpeed * time, yAxis) * 
 		glm::translate(glm::mat4(), origin);
 	updateModelMatrix(object);
 }
 
-GLObject generatePlanet(const char *textureFilename, float radius, float rotationSpeed, float orbitRadius, float orbitGrad) {
+GLObject generatePlanet(const char *textureFilename, float radius, float rotationSpeed, float orbitRadius, float orbitGrad, float orbitPeriod) {
 	// How many segments in your sphere
 	int slices = 100;
 	int stacks = slices;
@@ -68,6 +68,13 @@ GLObject generatePlanet(const char *textureFilename, float radius, float rotatio
 	object.orbitRadius = orbitRadius;
 	object.orbitGradient = orbitGrad;
 	object.rotationSpeed = rotationSpeed;
+
+	if (orbitPeriod != 0.0f) {
+		object.orbitPeriod = orbitPeriod;
+	} else {
+		object.orbitPeriod = 1.0f;
+	}
+
 	loadObjectTexture(object, textureFilename);
 	createSphereData(object.buffer, object.indices, radius, slices, stacks);
 	object.sp = loadProgram(planetVertShader, NULL, NULL, NULL, planetFragShader);
@@ -75,16 +82,22 @@ GLObject generatePlanet(const char *textureFilename, float radius, float rotatio
 	bindAndSetBuffers(object, false);
 	object.modelMatrixLoc = glGetUniformLocation(object.sp, "uModel");
 	object.viewMatrixLoc = glGetUniformLocation(object.sp, "uView");
-	orbit(object, object.orbitRadius, 0.0, object.orbitGradient);
+	orbit(object, 0.0);
 	updateViewMatrix(object);
 	glUniformMatrix4fv(glGetUniformLocation(object.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	if (object.orbitRadius == 0.0f) {
+		glUniform4f(glGetUniformLocation(object.sp, "Ia"), 1.0f, 1.0f, 1.0f, 1.0f);
+		glUniform4f(glGetUniformLocation(object.sp, "Kd"), 0.0f, 0.0f, 0.0f, 0.0f);
+		glUniform4f(glGetUniformLocation(object.sp, "Ks"), 0.0f, 0.0f, 0.0f, 0.0f);
+	}
 
 	return object;
 }
 
 void drawPlanet(GLObject &object, float time) {
 	glUseProgram(object.sp);
-	orbit(object, object.orbitRadius, time, object.orbitGradient);
+	// orbit(object, time);
+	orbit(object, 0.0);
 	updateViewMatrix(object);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, object.texture);
@@ -216,12 +229,15 @@ int main() {
 	// ----------------------------------------------------------------------
 	// End of skybox stuff
 	// ----------------------------------------------------------------------
-
-	GLObject sun = generatePlanet("./images/sun.jpg", 1.09f, 0.0f, 0.0f, 0.0f);
-	GLObject mercury = generatePlanet("./images/earth_texture.tga", 0.05, 15.0f, 2.0f, -0.05f);
-	GLObject venus = generatePlanet("./images/earth_texture.tga", 0.12, 15.0f, 3.0f, 0.05f);
-	GLObject earth = generatePlanet("./images/earth_texture.tga", 0.1276, 10.0f, 4.0f, 0.25f);
-	GLObject mars = generatePlanet("./images/earth_texture.tga", 0.068, -5.0f, 6.0f, -0.3f);
+	float sunDiameter = 10.0f;
+	float earthDiameter = 0.1;
+	GLObject sun = generatePlanet("./images/sun.jpg", sunDiameter,  0.0,                0.0f,  0.0f,                       0.0f);
+	GLObject mercury = generatePlanet("./images/earth_texture.tga", 0.5*earthDiameter,  15.0f, 2.0f + sunDiameter, -0.05f, 2.0f);
+	GLObject venus = generatePlanet("./images/earth_texture.tga",   0.95*earthDiameter, 15.0f, 3.0f + sunDiameter, 0.05f,  3.0f);
+	GLObject earth = generatePlanet("./images/earth_texture.tga",   earthDiameter,      10.0f, 4.0f + sunDiameter, 0.25f,  4.0f);
+	GLObject mars = generatePlanet("./images/marsMap.jpg",    0.53*earthDiameter, -5.0f, 6.0f + sunDiameter, -0.3f,  5.0f);
+	GLObject jupiter = generatePlanet("./images/jupiter.jpg", 10.0*earthDiameter, 2.0f,  16.0f + sunDiameter, 0.1f,  10.0f);
+	GLObject saturn = generatePlanet("./images/saturn.jpg", 8.5*earthDiameter, 3.5f,  25.0f + sunDiameter, -0.25f,  18.0f);
 	
 
 	// ----------------------------------------------------------------------
@@ -232,7 +248,8 @@ int main() {
 
 	float modelThetaX = 0, modelThetaY = 0;
 
-	cam.moveBackwards(10.0f);
+	cam.moveBackwards(5.0f);
+	cam.moveRight(sunDiameter + 5.0f);
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -291,9 +308,10 @@ int main() {
 
 		drawPlanet(mercury, elapsed);
 		drawPlanet(venus, elapsed);
-
 		drawPlanet(earth, elapsed);
 		drawPlanet(mars, elapsed);
+		drawPlanet(jupiter, elapsed);
+		drawPlanet(saturn, elapsed);
 		
 
 		// ----------------------------------------------------------------------
