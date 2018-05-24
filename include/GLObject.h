@@ -10,6 +10,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "image.h"
+#include "glm_virtual_camera.h"
 
 
 using namespace std;
@@ -23,7 +24,14 @@ struct GLObject {
 	GLuint sp;
 	GLuint modelMatrixLoc;
 	GLuint viewMatrixLoc;
-	GLuint texture;};
+	GLuint texture;
+	GLMVirtualCamera cam; 
+	glm::mat4 modelMatrix;
+	float rotationSpeed;
+	glm::vec3 position;
+	float orbitRadius;
+	float orbitGradient;
+};
 
 void loadObjectTexture(GLObject &object, const char *filename);
 void bindAndSetBuffers(GLObject &object, bool lines);

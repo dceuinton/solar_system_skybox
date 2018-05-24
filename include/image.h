@@ -24,7 +24,7 @@
 #elif defined(__APPLE__)
 	#define GLFW_INCLUDE_GLCOREARB
 	#include <GLFW/glfw3.h>
-	#include <OpenGL/gl3.h>
+	// #include <OpenGL/gl3.h>
 	#include <OpenGL/gl3ext.h>
 #endif
 

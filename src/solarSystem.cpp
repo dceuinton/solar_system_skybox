@@ -19,18 +19,87 @@ using namespace std;
 #define PI 3.14159
 
 GLMVirtualCamera cam; 
+const char *planetVertShader = "./shader/planet.vert.glsl";
+const char *planetFragShader = "./shader/planet.frag.glsl";
 
-// struct GLObject {
-// 	vector<glm::vec4> buffer;
-// 	vector<glm::ivec3> indices;
-// 	GLuint vao;
-// 	GLuint vbo;
-// 	GLuint ebo;
-// 	GLuint sp;
-// 	GLuint modelMatrixLoc;
-// 	GLuint viewMatrixLoc;
-// 	GLuint texture;
-// };
+const glm::vec3 xAxis = glm::vec3(1.0f, 0.0f, 0.0f);
+const glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+const glm::vec3 zAxis = glm::vec3(0.0f, 0.0f, -1.0f);
+const glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
+
+void rotatePlanet(GLObject &planet, float degrees, glm::vec3 axis) {
+	planet.modelMatrix = glm::rotate(glm::mat4(), glm::radians(degrees), axis);
+}
+
+void translatePlanet(GLObject &planet, glm::vec3 vector) {
+	planet.modelMatrix = glm::translate(glm::mat4(), vector);
+	planet.position += vector;
+}
+
+void updateModelMatrix(GLObject &object) {
+	glUseProgram(object.sp);
+	glUniformMatrix4fv(object.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(object.modelMatrix));
+}
+
+void updateViewMatrix(GLObject &object) {
+	glUseProgram(object.sp);
+	glUniformMatrix4fv(object.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+}
+
+void orbit(GLObject & object, float radius, float time, float gradient) {
+	float x, y, z;
+	x = radius * cos(time);
+	y = gradient * x;
+	z = radius * sin(time);
+	object.modelMatrix = glm::translate(glm::mat4(), glm::vec3(x, y, z)) * 
+		glm::rotate(glm::mat4(), object.rotationSpeed * time, yAxis) * 
+		glm::translate(glm::mat4(), origin);
+	updateModelMatrix(object);
+}
+
+GLObject generatePlanet(const char *textureFilename, float radius, float rotationSpeed, float orbitRadius, float orbitGrad) {
+	// How many segments in your sphere
+	int slices = 100;
+	int stacks = slices;
+
+	GLObject object;
+	object.orbitRadius = orbitRadius;
+	object.orbitGradient = orbitGrad;
+	object.rotationSpeed = rotationSpeed;
+	loadObjectTexture(object, textureFilename);
+	createSphereData(object.buffer, object.indices, radius, slices, stacks);
+	object.sp = loadProgram(planetVertShader, NULL, NULL, NULL, planetFragShader);
+	glUseProgram(object.sp);
+	bindAndSetBuffers(object, false);
+
+	return object;
+}
+
+void drawPlanet(GLObject &object, float time) {
+	glUseProgram(object.sp);
+	orbit(object, object.orbitRadius, time, object.orbitGradient);
+	updateViewMatrix(object);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, object.texture);
+	glBindVertexArray(object.vao);
+	glDrawElements(GL_TRIANGLES, object.indices.size() * 3, GL_UNSIGNED_INT, NULL);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+}
+
+// void spinOnYMatrix(GLObject &object, float time) {
+// 	object.modelMatrix = glm::rotate(object.modelMatrix, time * object.rotationSpeed, yAxis);
+// 	glUseProgram(object.sp);
+// 	glUniformMatrix4fv(object.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(object.modelMatrix));
+// }
+
+// void updateModelMatrix(GLObject &object, float time) {
+// 	object.modelMatrix = glm::rotate(object.modelMatrix, time * object.rotationSpeed, yAxis) * 
+// 						glm::translate() * 
+// 						glm::rotate() * 
+// 						glm::translate();
+// }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -61,6 +130,9 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+
+	// Skybox stuff
+	// ----------------------------------------------------------------------
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
@@ -131,34 +203,53 @@ int main() {
 	glUseProgram(0);
 
 	// ----------------------------------------------------------------------
+	// End of skybox stuff
+	// ----------------------------------------------------------------------
 
-	GLObject earth;
-	loadObjectTexture(earth, "./images/earth_texture.tga");
-	createSphereData(earth.buffer, earth.indices, 0.1, 100, 100);
-	earth.sp = loadProgram("./shader/planet.vert.glsl", NULL, NULL, NULL, "./shader/planet.frag.glsl");
-	glUseProgram(earth.sp);
-	bindAndSetBuffers(earth, false);
+	GLObject sun = generatePlanet("./images/sun.jpg", 1.09f, 0.0f, 0.0f, 0.0f);
+	GLObject earth = generatePlanet("./images/earth_texture.tga", 0.1, 10.0f, 3.0f, 0.25f);
 
 	// ----------------------------------------------------------------------
+
+	glUseProgram(sun.sp);
+	sun.modelMatrixLoc = glGetUniformLocation(sun.sp, "uModel");
+	sun.viewMatrixLoc = glGetUniformLocation(sun.sp, "uView");
+
+	glm::mat4 sunModelMatrix;
+	glUniformMatrix4fv(sun.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(sunModelMatrix));
+	// glUniformMatrix4fv(sun.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+	updateViewMatrix(sun);
+	glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
 	glUseProgram(earth.sp);
 	earth.modelMatrixLoc = glGetUniformLocation(earth.sp, "uModel");
 	earth.viewMatrixLoc  = glGetUniformLocation(earth.sp, "uView");
 
-	glm::mat4 earthModelMatrix;
-	glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earthModelMatrix));
-	glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+	// earth.modelMatrix = glm::rotate(glm::mat4(), glm::radians(-30.0f), yAxis) * 
+	// 				    glm::rotate(glm::mat4(), glm::radians(180.0f), zAxis) *
+	// 				    glm::translate(glm::mat4(), glm::vec3(-3.0f, 0.0f, 0.0f));
+
+	translatePlanet(earth, glm::vec3(3.0f, 0.0f, 0.0f));
+	// rotatePlanet(earth, 210.0, zAxis);
+	rotatePlanet(earth, 180.0, zAxis);
+	
+	// glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(*earth.cam.getViewMatrix()));
+	// glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earth.modelMatrix));
+	updateModelMatrix(earth);
+	updateViewMatrix(earth);
+	// glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
 	glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
 	// ----------------------------------------------------------------------
 
-	float currentTime = 0.0;
+	float currentTime = 0.0f;
 	float previousTime = glfwGetTime();
-	float dt = 0.0;
+	float dt = 0.0f;
+	float elapsed = 0.0f;
 
 	float modelThetaX = 0, modelThetaY = 0;
 
-	cam.moveBackwards(1.0f);
+	cam.moveBackwards(10.0f);
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -166,6 +257,7 @@ int main() {
 		currentTime = glfwGetTime();
 		dt = currentTime - previousTime;
 		previousTime = currentTime;
+		elapsed += dt;
 
 		glfwMakeContextCurrent(window);
 		glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
@@ -173,7 +265,7 @@ int main() {
 
 		// ----------------------------------------------------------------------
 
-		float camMoveSpeed = 1.0f;
+		float camMoveSpeed = 5.0f;
 		float camRotateSpeed = PI;
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)     { cam.moveForwards(dt * camMoveSpeed); }
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)     { cam.moveBackwards(dt * camMoveSpeed); }
@@ -212,22 +304,11 @@ int main() {
 
 		// ----------------------------------------------------------------------
 
-		earthModelMatrix = glm::translate(glm::mat4(),              glm::vec3(0.0f, 0.0f, 0.0f)) * 
-						   glm::rotate(   glm::mat4(), modelThetaY, glm::vec3(0.0f, 1.0f, 0.0f)) *
-						   glm::rotate(   glm::mat4(), modelThetaX, glm::vec3(1.0f, 0.0f, 0.0f));		
+		drawPlanet(sun, elapsed);
 
-		glUseProgram(earth.sp);
-		glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earthModelMatrix));
-		glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+		drawPlanet(earth, elapsed);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, earth.texture);
-
-		glBindVertexArray(earth.vao);
-		glDrawElements(GL_TRIANGLES, earth.indices.size() * 3, GL_UNSIGNED_INT, NULL);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, earth.texture);
+		// ----------------------------------------------------------------------
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
