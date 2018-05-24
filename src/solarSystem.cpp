@@ -27,6 +27,8 @@ const glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 zAxis = glm::vec3(0.0f, 0.0f, -1.0f);
 const glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
 
+glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 50.0f);
+
 void rotatePlanet(GLObject &planet, float degrees, glm::vec3 axis) {
 	planet.modelMatrix = glm::rotate(glm::mat4(), glm::radians(degrees), axis);
 }
@@ -71,6 +73,11 @@ GLObject generatePlanet(const char *textureFilename, float radius, float rotatio
 	object.sp = loadProgram(planetVertShader, NULL, NULL, NULL, planetFragShader);
 	glUseProgram(object.sp);
 	bindAndSetBuffers(object, false);
+	object.modelMatrixLoc = glGetUniformLocation(object.sp, "uModel");
+	object.viewMatrixLoc = glGetUniformLocation(object.sp, "uView");
+	orbit(object, object.orbitRadius, 0.0, object.orbitGradient);
+	updateViewMatrix(object);
+	glUniformMatrix4fv(glGetUniformLocation(object.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
 	return object;
 }
@@ -110,6 +117,11 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 }
 
 int main() {
+
+	float currentTime = 0.0f;
+	float previousTime = glfwGetTime();
+	float dt = 0.0f;
+	float elapsed = 0.0f;
 
 	// Initialises the GLFW library
 	if (!glfwInit()){
@@ -198,7 +210,6 @@ int main() {
 	glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseRotationMatrix()));
 	// glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(skyboxModel));
 
-	glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 50.0f);
 	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "u_Projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUseProgram(0);
 
@@ -211,41 +222,36 @@ int main() {
 
 	// ----------------------------------------------------------------------
 
-	glUseProgram(sun.sp);
-	sun.modelMatrixLoc = glGetUniformLocation(sun.sp, "uModel");
-	sun.viewMatrixLoc = glGetUniformLocation(sun.sp, "uView");
+	// glUseProgram(sun.sp);
+	// sun.modelMatrixLoc = glGetUniformLocation(sun.sp, "uModel");
+	// sun.viewMatrixLoc = glGetUniformLocation(sun.sp, "uView");
 
-	glm::mat4 sunModelMatrix;
-	glUniformMatrix4fv(sun.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(sunModelMatrix));
-	// glUniformMatrix4fv(sun.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
-	updateViewMatrix(sun);
-	glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	// glm::mat4 sunModelMatrix;
+	// glUniformMatrix4fv(sun.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(sunModelMatrix));
+	// // glUniformMatrix4fv(sun.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+	// updateViewMatrix(sun);
+	// glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
-	glUseProgram(earth.sp);
-	earth.modelMatrixLoc = glGetUniformLocation(earth.sp, "uModel");
-	earth.viewMatrixLoc  = glGetUniformLocation(earth.sp, "uView");
+	// glUseProgram(earth.sp);
+	// earth.modelMatrixLoc = glGetUniformLocation(earth.sp, "uModel");
+	// earth.viewMatrixLoc  = glGetUniformLocation(earth.sp, "uView");
 
-	// earth.modelMatrix = glm::rotate(glm::mat4(), glm::radians(-30.0f), yAxis) * 
-	// 				    glm::rotate(glm::mat4(), glm::radians(180.0f), zAxis) *
-	// 				    glm::translate(glm::mat4(), glm::vec3(-3.0f, 0.0f, 0.0f));
+	// // earth.modelMatrix = glm::rotate(glm::mat4(), glm::radians(-30.0f), yAxis) * 
+	// // 				    glm::rotate(glm::mat4(), glm::radians(180.0f), zAxis) *
+	// // 				    glm::translate(glm::mat4(), glm::vec3(-3.0f, 0.0f, 0.0f));
 
-	translatePlanet(earth, glm::vec3(3.0f, 0.0f, 0.0f));
-	// rotatePlanet(earth, 210.0, zAxis);
-	rotatePlanet(earth, 180.0, zAxis);
+	// translatePlanet(earth, glm::vec3(3.0f, 0.0f, 0.0f));
+	// // rotatePlanet(earth, 210.0, zAxis);
+	// rotatePlanet(earth, 180.0, zAxis);
 	
-	// glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(*earth.cam.getViewMatrix()));
-	// glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earth.modelMatrix));
-	updateModelMatrix(earth);
-	updateViewMatrix(earth);
-	// glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
-	glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	// // glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(*earth.cam.getViewMatrix()));
+	// // glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earth.modelMatrix));
+	// updateModelMatrix(earth);
+	// updateViewMatrix(earth);
+	// // glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+	// glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
 	// ----------------------------------------------------------------------
-
-	float currentTime = 0.0f;
-	float previousTime = glfwGetTime();
-	float dt = 0.0f;
-	float elapsed = 0.0f;
 
 	float modelThetaX = 0, modelThetaY = 0;
 
