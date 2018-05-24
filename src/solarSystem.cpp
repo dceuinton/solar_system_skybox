@@ -218,38 +218,15 @@ int main() {
 	// ----------------------------------------------------------------------
 
 	GLObject sun = generatePlanet("./images/sun.jpg", 1.09f, 0.0f, 0.0f, 0.0f);
-	GLObject earth = generatePlanet("./images/earth_texture.tga", 0.1, 10.0f, 3.0f, 0.25f);
+	GLObject mercury = generatePlanet("./images/earth_texture.tga", 0.05, 15.0f, 2.0f, -0.05f);
+	GLObject venus = generatePlanet("./images/earth_texture.tga", 0.12, 15.0f, 3.0f, 0.05f);
+	GLObject earth = generatePlanet("./images/earth_texture.tga", 0.1276, 10.0f, 4.0f, 0.25f);
+	GLObject mars = generatePlanet("./images/earth_texture.tga", 0.068, -5.0f, 6.0f, -0.3f);
+	
 
 	// ----------------------------------------------------------------------
 
-	// glUseProgram(sun.sp);
-	// sun.modelMatrixLoc = glGetUniformLocation(sun.sp, "uModel");
-	// sun.viewMatrixLoc = glGetUniformLocation(sun.sp, "uView");
-
-	// glm::mat4 sunModelMatrix;
-	// glUniformMatrix4fv(sun.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(sunModelMatrix));
-	// // glUniformMatrix4fv(sun.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
-	// updateViewMatrix(sun);
-	// glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-
-	// glUseProgram(earth.sp);
-	// earth.modelMatrixLoc = glGetUniformLocation(earth.sp, "uModel");
-	// earth.viewMatrixLoc  = glGetUniformLocation(earth.sp, "uView");
-
-	// // earth.modelMatrix = glm::rotate(glm::mat4(), glm::radians(-30.0f), yAxis) * 
-	// // 				    glm::rotate(glm::mat4(), glm::radians(180.0f), zAxis) *
-	// // 				    glm::translate(glm::mat4(), glm::vec3(-3.0f, 0.0f, 0.0f));
-
-	// translatePlanet(earth, glm::vec3(3.0f, 0.0f, 0.0f));
-	// // rotatePlanet(earth, 210.0, zAxis);
-	// rotatePlanet(earth, 180.0, zAxis);
 	
-	// // glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(*earth.cam.getViewMatrix()));
-	// // glUniformMatrix4fv(earth.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(earth.modelMatrix));
-	// updateModelMatrix(earth);
-	// updateViewMatrix(earth);
-	// // glUniformMatrix4fv(earth.viewMatrixLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
-	// glUniformMatrix4fv(glGetUniformLocation(earth.sp, "uProjection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
 	// ----------------------------------------------------------------------
 
@@ -312,7 +289,12 @@ int main() {
 
 		drawPlanet(sun, elapsed);
 
+		drawPlanet(mercury, elapsed);
+		drawPlanet(venus, elapsed);
+
 		drawPlanet(earth, elapsed);
+		drawPlanet(mars, elapsed);
+		
 
 		// ----------------------------------------------------------------------
 
