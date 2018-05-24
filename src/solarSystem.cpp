@@ -121,7 +121,10 @@ int main() {
 	glUniform1i(glGetUniformLocation(skyboxProgram, "u_texture_Map"), 0);
 
 	GLuint skyboxViewLoc = glGetUniformLocation(skyboxProgram, "u_View");
-	glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+	glm::mat4 skyboxModel;
+	// glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+	glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseRotationMatrix()));
+	// glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(skyboxModel));
 
 	glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 50.0f);
 	glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "u_Projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
@@ -131,7 +134,7 @@ int main() {
 
 	GLObject earth;
 	loadObjectTexture(earth, "./images/earth_texture.tga");
-	createSphereData(earth.buffer, earth.indices, 0.3, 100, 100);
+	createSphereData(earth.buffer, earth.indices, 0.1, 100, 100);
 	earth.sp = loadProgram("./shader/planet.vert.glsl", NULL, NULL, NULL, "./shader/planet.frag.glsl");
 	glUseProgram(earth.sp);
 	bindAndSetBuffers(earth, false);
@@ -193,7 +196,9 @@ int main() {
 		// ----------------------------------------------------------------------
 
 		glUseProgram(skyboxProgram);
-		glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+		// glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseViewMatrix()));
+		glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(*cam.getInverseRotationMatrix()));
+		// glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(skyboxModel));
 
 		glUseProgram(skyboxProgram);
 		glBindVertexArray(skyboxVAO);
