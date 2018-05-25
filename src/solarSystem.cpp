@@ -27,7 +27,7 @@ const glm::vec3 yAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 const glm::vec3 zAxis = glm::vec3(0.0f, 0.0f, -1.0f);
 const glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
 
-glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 50.0f);
+glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 100.0f);
 
 void rotatePlanet(GLObject &planet, float degrees, glm::vec3 axis) {
 	planet.modelMatrix = glm::rotate(glm::mat4(), glm::radians(degrees), axis);
@@ -96,8 +96,8 @@ GLObject generatePlanet(const char *textureFilename, float radius, float rotatio
 
 void drawPlanet(GLObject &object, float time) {
 	glUseProgram(object.sp);
-	// orbit(object, time);
-	orbit(object, 0.0);
+	orbit(object, time);
+	// orbit(object, 0.0);
 	updateViewMatrix(object);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, object.texture);
@@ -231,25 +231,35 @@ int main() {
 	// ----------------------------------------------------------------------
 	float sunDiameter = 10.0f;
 	float earthDiameter = 0.1;
-	GLObject sun = generatePlanet("./images/sun.jpg", sunDiameter,  0.0,                0.0f,  0.0f,                       0.0f);
-	GLObject mercury = generatePlanet("./images/earth_texture.tga", 0.5*earthDiameter,  15.0f, 2.0f + sunDiameter, -0.05f, 2.0f);
-	GLObject venus = generatePlanet("./images/earth_texture.tga",   0.95*earthDiameter, 15.0f, 3.0f + sunDiameter, 0.05f,  3.0f);
-	GLObject earth = generatePlanet("./images/earth_texture.tga",   earthDiameter,      10.0f, 4.0f + sunDiameter, 0.25f,  4.0f);
-	GLObject mars = generatePlanet("./images/marsMap.jpg",    0.53*earthDiameter, -5.0f, 6.0f + sunDiameter, -0.3f,  5.0f);
-	GLObject jupiter = generatePlanet("./images/jupiter.jpg", 10.0*earthDiameter, 2.0f,  16.0f + sunDiameter, 0.1f,  10.0f);
-	GLObject saturn = generatePlanet("./images/saturn.jpg", 8.5*earthDiameter, 3.5f,  25.0f + sunDiameter, -0.25f,  18.0f);
+	// 									(Texture, Diameter, Spinspeed, Orbit Radius, Orbit Gradient, Orbit Period)
+	GLObject sun     = generatePlanet("./images/sun.jpg",           sunDiameter,         0.00f, 0.00f,                0.0f,  0.0f);
+	GLObject mercury = generatePlanet("./images/mercurymap.jpg",     0.50*earthDiameter,  15.0f, 2.00f + sunDiameter, -0.05f, 5.0f);
+	GLObject venus   = generatePlanet("./images/venusmap.jpg",      0.95*earthDiameter,  15.0f, 3.00f + sunDiameter,  0.05f, 8.0f);
+	GLObject earth   = generatePlanet("./images/earth_texture.tga", earthDiameter,       10.0f, 4.00f + sunDiameter,  0.25f, 12.0f);
+	GLObject mars    = generatePlanet("./images/marsMap.jpg",       0.53*earthDiameter, -5.0f, 6.00f + sunDiameter,  -0.30f, 16.0f);
+	GLObject jupiter = generatePlanet("./images/jupiter.jpg",       11.2*earthDiameter,  2.00f, 16.0f + sunDiameter,  0.10f, 19.0f);
+	GLObject saturn  = generatePlanet("./images/saturn.jpg",        9.5*earthDiameter,   3.50f, 25.0f + sunDiameter, -0.25f, 21.0f);
+	GLObject uranus  = generatePlanet("./images/uranusmap.jpg",     4*earthDiameter,     6.00f, 30.0f + sunDiameter,  0.00f, 25.0f);
+	GLObject neptune = generatePlanet("./images/neptunemap.jpg",    3.88*earthDiameter,  2.00f, 33.0f + sunDiameter,  0.15f, 30.0f);
 	
+	std::vector<GLObject> planets;
+	planets.push_back(sun);
+	planets.push_back(mercury);
+	planets.push_back(venus);
+	planets.push_back(earth);
+	planets.push_back(mars);
+	planets.push_back(jupiter);
+	planets.push_back(saturn);
+	planets.push_back(uranus);
+	planets.push_back(neptune);
 
-	// ----------------------------------------------------------------------
-
-	
 
 	// ----------------------------------------------------------------------
 
 	float modelThetaX = 0, modelThetaY = 0;
 
-	cam.moveBackwards(5.0f);
-	cam.moveRight(sunDiameter + 5.0f);
+	cam.moveBackwards(40.0f);
+	cam.moveRight(sunDiameter + 10.0f);
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -304,15 +314,9 @@ int main() {
 
 		// ----------------------------------------------------------------------
 
-		drawPlanet(sun, elapsed);
-
-		drawPlanet(mercury, elapsed);
-		drawPlanet(venus, elapsed);
-		drawPlanet(earth, elapsed);
-		drawPlanet(mars, elapsed);
-		drawPlanet(jupiter, elapsed);
-		drawPlanet(saturn, elapsed);
-		
+		for (auto o: planets) {
+			drawPlanet(o, elapsed);
+		}		
 
 		// ----------------------------------------------------------------------
 

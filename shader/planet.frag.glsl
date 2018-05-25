@@ -15,7 +15,7 @@ uniform vec4 Is = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 // uniform vec4 Kd = vec4(0.780392, 0.568627, 0.113725, 1.0);
 // uniform vec4 Ks = vec4(0.992157, 0.941176, 0.807843, 1.0);
 
-uniform vec4 Ka = vec4(0.6, 0.6, 0.8, 1.0);
+uniform vec4 Ka = vec4(1.0, 0.90, 0.90, 1.0);
 uniform vec4 Kd = vec4(0.64, 0.64, 0.64, 1.0);
 uniform vec4 Ks = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float a = 3.0;
@@ -39,7 +39,7 @@ void main() {
 	vec4 KsValue = Ks;
 
 	KaValue = texture(uTexture, UV);
-	KdValue = Kd; 
+	KdValue = Ka; 
 	KsValue = Ks; 
 
 	vec4 Ta = KaValue * Ia;
