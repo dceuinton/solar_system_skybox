@@ -1,6 +1,14 @@
 // Assignment number 2, 159.709, 2018 S1
 // Euinton, Dale, 14026002,
-// Explain what the program is doing . . .
+// This program shows a not-to-scale model of the solar system. It uses a skybox and the phong shading model and fairly 
+// random periods and spins. 
+
+// Controls - 
+// W, A, S, D            - Movement of virtual camera
+// R, F                  - Vertical movement of virtual camera
+// UP, DOWN, LEFT, RIGHT - Look of the virtual camera
+// Q, E                  - Roll in the virtual camera
+// SPACE                 - Pause the program to investigate individual planets
 
 #include <iostream>
 #include <stdio.h>
@@ -29,6 +37,9 @@ const glm::vec3 origin = glm::vec3(0.0f, 0.0f, 0.0f);
 
 glm::mat4 projectionMatrix = glm::perspective(glm::radians(67.0f), 1.0f, 0.1f, 100.0f);
 
+float timeSnapshot = 0.0f;
+bool  pause = false; 
+
 void rotatePlanet(GLObject &planet, float degrees, glm::vec3 axis) {
 	planet.modelMatrix = glm::rotate(glm::mat4(), glm::radians(degrees), axis);
 }
@@ -50,6 +61,7 @@ void updateViewMatrix(GLObject &object) {
 
 void orbit(GLObject & object, float time) {
 	float x, y, z;
+	timeSnapshot = time;
 	x = object.orbitRadius * cos(2*M_PI*time / object.orbitPeriod);
 	y = object.orbitGradient * x;
 	z = object.orbitRadius * sin(2*M_PI*time / object.orbitPeriod);
@@ -96,7 +108,11 @@ GLObject generatePlanet(const char *textureFilename, float radius, float rotatio
 
 void drawPlanet(GLObject &object, float time) {
 	glUseProgram(object.sp);
-	orbit(object, time);
+	if (pause) {
+		orbit(object, timeSnapshot);
+	} else {
+		orbit(object, time);
+	}
 	// orbit(object, 0.0);
 	updateViewMatrix(object);
 	glActiveTexture(GL_TEXTURE0);
@@ -107,19 +123,6 @@ void drawPlanet(GLObject &object, float time) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindVertexArray(0);
 }
-
-// void spinOnYMatrix(GLObject &object, float time) {
-// 	object.modelMatrix = glm::rotate(object.modelMatrix, time * object.rotationSpeed, yAxis);
-// 	glUseProgram(object.sp);
-// 	glUniformMatrix4fv(object.modelMatrixLoc, 1, GL_FALSE, glm::value_ptr(object.modelMatrix));
-// }
-
-// void updateModelMatrix(GLObject &object, float time) {
-// 	object.modelMatrix = glm::rotate(object.modelMatrix, time * object.rotationSpeed, yAxis) * 
-// 						glm::translate() * 
-// 						glm::rotate() * 
-// 						glm::translate();
-// }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -166,13 +169,22 @@ int main() {
 	int x, y, n;
 
 	const char *filenames[6] = {
-		"images/Space-Background.jpg",
-		"images/Space-Background.jpg",
-		"images/Space-Background.jpg",
-		"images/Space-Background.jpg",
-		"images/Space-Background.jpg",
-		"images/Space-Background.jpg",
+		"images/GalaxyTex_NegativeX.tga",
+		"images/GalaxyTex_PositiveX.tga",
+		"images/GalaxyTex_PositiveY.tga",
+		"images/GalaxyTex_NegativeYChanged.tga",
+		"images/GalaxyTex_NegativeZ.tga",
+		"images/GalaxyTex_PositiveZ.tga",
 	};
+
+	// const char *filenames[6] = {
+	// 	"images/GalaxyTex_NegativeX.png",
+	// 	"images/Space-Background.jpg",
+	// 	"images/Space-Background.jpg",
+	// 	"images/Space-Background.jpg",
+	// 	"images/Space-Background.jpg",
+	// 	"images/Space-Background.jpg",
+	// };
 
 	GLuint texture = loadTextureCubeMap(filenames, x, y, n);
 
@@ -258,8 +270,8 @@ int main() {
 
 	float modelThetaX = 0, modelThetaY = 0;
 
-	cam.moveBackwards(40.0f);
-	cam.moveRight(sunDiameter + 10.0f);
+	cam.moveBackwards(11.3f);
+	cam.lookRight(1.5);
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -289,11 +301,14 @@ int main() {
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) { cam.lookRight(dt * camRotateSpeed); }
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)     { cam.rollLeft(dt * camRotateSpeed); }
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)     { cam.rollRight(dt * camRotateSpeed); }
-
-		if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)     { modelThetaX += dt * camRotateSpeed; }		
-		if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)     { modelThetaX -= dt * camRotateSpeed; }		
-		if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)     { modelThetaY += dt * camRotateSpeed; }		
-		if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)     { modelThetaY -= dt * camRotateSpeed; }		
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) { 
+			if (pause) {
+				elapsed = timeSnapshot;
+			}
+			pause = !pause;
+		 }
+		
+		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)     { cam.printPosition(); }		
 
 		// ----------------------------------------------------------------------
 
@@ -324,7 +339,15 @@ int main() {
 		glfwPollEvents();
 	}
 
-	printf("%s\n", glGetString(GL_VERSION));
+	for (auto o: planets) {
+		glDeleteVertexArrays(1, &o.vao);
+		glDeleteBuffers(1, &o.vbo);
+		glDeleteBuffers(1, &o.ebo);
+		glDeleteTextures(1, &o.texture);
+		glDeleteProgram(o.sp);
+	}
+
+	// printf("%s\n", glGetString(GL_VERSION));
 
 	glDeleteVertexArrays(1, &skyboxVAO);
 	glDeleteBuffers(1, &skyboxVBO);
